@@ -7,3 +7,6 @@ App Configuration complements Azure Key Vault, which is used to store applicatio
 The only problem was that unlike Key Vault, which has an available connector to be used inside Logic Apps, App Configuration doesn’t have a connector available.
 
 This Function App is intended to close this gap and for you to be able to use it inside Logic Apps (or any other resource) and read App Configurations.
+
+# About Me
+**Sandro Pereira** | [DevScope](http://www.devscope.net/) | MVP & MCTS BizTalk Server 2010 | [https://blog.sandro-pereira.com/](https://blog.sandro-pereira.com/) | [@sandro_asp](https://twitter.com/sandro_asp)
