@@ -1,0 +1,99 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Response": {
+                "type": "Response",
+                "kind": "http",
+                "inputs": {
+                    "statusCode": 200,
+                    "body": {
+                        "Startus": "@{variables('varRespone')}"
+                    }
+                },
+                "runAfter": {
+                    "Catch_Scope": [
+                        "Succeeded",
+                        "TIMEDOUT",
+                        "SKIPPED",
+                        "FAILED"
+                    ]
+                }
+            },
+            "Try_Scope": {
+                "type": "Scope",
+                "actions": {
+                    "XML_Validation": {
+                        "type": "XmlValidation",
+                        "inputs": {
+                            "content": "@triggerBody()",
+                            "schema": {
+                                "name": "DateRestrictions.xsd"
+                            }
+                        },
+                        "runAfter": {}
+                    }
+                },
+                "runAfter": {
+                    "Initialize_variable": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Initialize_variable": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "varRespone",
+                            "type": "string",
+                            "value": "This is a valid request"
+                        }
+                    ]
+                },
+                "runAfter": {}
+            },
+            "Catch_Scope": {
+                "type": "Scope",
+                "actions": {
+                    "Set_variable": {
+                        "type": "SetVariable",
+                        "inputs": {
+                            "name": "varRespone",
+                            "value": "Invalid Request: @{first(body('Filter_array'))?['outputs']}"
+                        },
+                        "runAfter": {
+                            "Filter_array": [
+                                "Succeeded"
+                            ]
+                        }
+                    },
+                    "Filter_array": {
+                        "type": "Query",
+                        "inputs": {
+                            "from": "@result('Try_Scope')",
+                            "where": "@equals(item()?['status'], 'Failed')"
+                        },
+                        "runAfter": {}
+                    }
+                },
+                "runAfter": {
+                    "Try_Scope": [
+                        "TIMEDOUT",
+                        "FAILED"
+                    ]
+                }
+            }
+        },
+        "triggers": {
+            "manual": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {}
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {}
+    },
+    "kind": "Stateless"
+}
