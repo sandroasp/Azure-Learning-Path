@@ -1,0 +1,334 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_LA_catchError_POC_name": {
+            "defaultValue": "LA-catchError-POC",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_LA_catchError_POC_name')]",
+            "location": "westeurope",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "resourceGroup": {
+                                            "type": "string"
+                                        },
+                                        "runId": {
+                                            "type": "string"
+                                        },
+                                        "subscriptionId": {
+                                            "type": "string"
+                                        },
+                                        "workflowName": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Call_Logic_App_Rest_API_To_Get_Run_History": {
+                            "runAfter": {
+                                "Initialize_CatchError_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Http",
+                            "inputs": {
+                                "authentication": {
+                                    "type": "ManagedServiceIdentity"
+                                },
+                                "headers": {
+                                    "Content-Type": "application/json"
+                                },
+                                "method": "GET",
+                                "uri": "https://management.azure.com/subscriptions/@{triggerBody()?['subscriptionId']}/resourceGroups/@{triggerBody()?['resourceGroup']}/providers/Microsoft.Logic/workflows/@{triggerBody()?['workflowName']}/runs/@{triggerBody()?['runId']}/actions?api-version=2016-06-01"
+                            }
+                        },
+                        "Filter_array_Run_History": {
+                            "runAfter": {
+                                "Call_Logic_App_Rest_API_To_Get_Run_History": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Query",
+                            "inputs": {
+                                "from": "@body('Call_Logic_App_Rest_API_To_Get_Run_History')?['value']",
+                                "where": "@equals(item()?['properties']?['status'], 'Failed')"
+                            }
+                        },
+                        "For_each_Filter_Array_Run_History": {
+                            "foreach": "@body('Filter_array_Run_History')",
+                            "actions": {
+                                "Error_Null": {
+                                    "actions": {
+                                        "Call_Outputs_URL": {
+                                            "runAfter": {},
+                                            "type": "Http",
+                                            "inputs": {
+                                                "method": "GET",
+                                                "uri": "@{items('For_each_Filter_Array_Run_History')?['properties']?['outputsLink']?['uri']}"
+                                            }
+                                        },
+                                        "Parse_Outputs_URL": {
+                                            "runAfter": {
+                                                "Call_Outputs_URL": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "ParseJson",
+                                            "inputs": {
+                                                "content": "@body('Call_Outputs_URL')",
+                                                "schema": {
+                                                    "items": {
+                                                        "properties": {
+                                                            "body": {
+                                                                "properties": {
+                                                                    "error": {
+                                                                        "properties": {
+                                                                            "code": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "message": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "type": "object"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "clientTrackingId": {
+                                                                "type": "string"
+                                                            },
+                                                            "code": {
+                                                                "type": "string"
+                                                            },
+                                                            "endTime": {
+                                                                "type": "string"
+                                                            },
+                                                            "error": {
+                                                                "properties": {
+                                                                    "code": {
+                                                                        "type": "string"
+                                                                    },
+                                                                    "message": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            },
+                                                            "name": {
+                                                                "type": "string"
+                                                            },
+                                                            "startTime": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
+                                                            "trackingId": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "name",
+                                                            "startTime",
+                                                            "endTime",
+                                                            "trackingId",
+                                                            "clientTrackingId",
+                                                            "status"
+                                                        ],
+                                                        "type": "object"
+                                                    },
+                                                    "type": "array"
+                                                }
+                                            }
+                                        },
+                                        "Set_Type_Error": {
+                                            "runAfter": {
+                                                "Parse_Outputs_URL": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "SetVariable",
+                                            "inputs": {
+                                                "name": "varTypeError",
+                                                "value": "@{if(equals(first(body('Parse_Outputs_URL'))?['error'],null),if(equals(first(body('Parse_Outputs_URL'))?['body']?['error'],null),'Default','BodyError'),'Error')}"
+                                            }
+                                        },
+                                        "Switch": {
+                                            "runAfter": {
+                                                "Set_Type_Error": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "cases": {
+                                                "Case-_Error": {
+                                                    "case": "Error",
+                                                    "actions": {
+                                                        "Set_Error": {
+                                                            "runAfter": {},
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "catchError",
+                                                                "value": "{\n\"name\": \"@{items('For_each_Filter_Array_Run_History')?['name']}\",\n\"type\": \"@{items('For_each_Filter_Array_Run_History')?['type']}\",\n\"status\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['status']}\",\n\"code\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['code']}\",\n\"startTime\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['startTime']}\",\n\"endTime\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['endTime']}\",\n\"errorMessage\": \"@{first(body('Parse_Outputs_URL'))?['error']?['message']}\"\n}"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Case_-_Body_Error": {
+                                                    "case": "BodyError",
+                                                    "actions": {
+                                                        "Set_Body_Error": {
+                                                            "runAfter": {},
+                                                            "type": "SetVariable",
+                                                            "inputs": {
+                                                                "name": "catchError",
+                                                                "value": "{\n\"name\": \"@{items('For_each_Filter_Array_Run_History')?['name']}\",\n\"type\": \"@{items('For_each_Filter_Array_Run_History')?['type']}\",\n\"status\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['status']}\",\n\"code\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['code']}\",\n\"startTime\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['startTime']}\",\n\"endTime\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['endTime']}\",\n\"errorMessage\": \"@{first(body('Parse_Outputs_URL'))?['body']['error']?['message']}\"\n}"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "default": {
+                                                "actions": {
+                                                    "Set_Default": {
+                                                        "runAfter": {},
+                                                        "type": "SetVariable",
+                                                        "inputs": {
+                                                            "name": "catchError",
+                                                            "value": "{\n\"name\": \"@{items('For_each_Filter_Array_Run_History')?['name']}\",\n\"type\": \"@{items('For_each_Filter_Array_Run_History')?['type']}\",\n\"status\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['status']}\",\n\"code\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['code']}\",\n\"startTime\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['startTime']}\",\n\"endTime\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['endTime']}\",\n\"errorMessage\": @{body('Call_Outputs_URL')}\n}"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "expression": "@variables('varTypeError')",
+                                            "type": "Switch"
+                                        }
+                                    },
+                                    "runAfter": {},
+                                    "else": {
+                                        "actions": {
+                                            "Error_Message": {
+                                                "actions": {
+                                                    "Error_In_The_Body_JSON": {
+                                                        "runAfter": {},
+                                                        "type": "SetVariable",
+                                                        "inputs": {
+                                                            "name": "catchError",
+                                                            "value": "{\n\"name\": \"@{items('For_each_Filter_Array_Run_History')?['name']}\",\n\"type\": \"@{items('For_each_Filter_Array_Run_History')?['type']}\",\n\"status\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['status']}\",\n\"code\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['code']}\",\n\"startTime\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['startTime']}\",\n\"endTime\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['endTime']}\",\n\"errorMessage\": \"@{items('For_each_Filter_Array_Run_History')?['properties']?['error']?['message']}\"\n}"
+                                                        }
+                                                    }
+                                                },
+                                                "runAfter": {},
+                                                "expression": {
+                                                    "and": [
+                                                        {
+                                                            "not": {
+                                                                "equals": [
+                                                                    "@items('For_each_Filter_Array_Run_History')?['properties']?['error']?['message']",
+                                                                    "An action failed. No dependent actions succeeded."
+                                                                ]
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                "type": "If"
+                                            }
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "equals": [
+                                                    "@items('For_each_Filter_Array_Run_History')?['properties']?['error']",
+                                                    "@null"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                }
+                            },
+                            "runAfter": {
+                                "Filter_array_Run_History": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "Initialize_CatchError_variable": {
+                            "runAfter": {
+                                "Initialize_TypeError_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "catchError",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_TypeError_variable": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "varTypeError",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Response": {
+                            "runAfter": {
+                                "For_each_Filter_Array_Run_History": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": "@variables('catchError')",
+                                "headers": {
+                                    "Content-Type": "application/json"
+                                },
+                                "statusCode": 200
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {}
+            }
+        }
+    ]
+}
