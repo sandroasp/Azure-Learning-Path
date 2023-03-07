@@ -1,0 +1,75 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_LA_ChatGPT_POC_name": {
+            "defaultValue": "LA-ChatGPT-POC",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_LA_ChatGPT_POC_name')]",
+            "location": "westeurope",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {}
+                        }
+                    },
+                    "actions": {
+                        "HTTP_-_Call_ChatGTP": {
+                            "runAfter": {},
+                            "type": "Http",
+                            "inputs": {
+                                "body": {
+                                    "messages": [
+                                        {
+                                            "content": "@{triggerBody()}",
+                                            "role": "user"
+                                        }
+                                    ],
+                                    "model": "gpt-3.5-turbo"
+                                },
+                                "headers": {
+                                    "Authorization": "Bearer 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",
+                                    "Content-Type": "application/json"
+                                },
+                                "method": "POST",
+                                "uri": "https://api.openai.com/v1/chat/completions"
+                            }
+                        },
+                        "Response": {
+                            "runAfter": {
+                                "HTTP_-_Call_ChatGTP": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": "@trim(outputs('HTTP_-_Call_ChatGTP')?['body']?['choices']?[0]?['message']?['content'])",
+                                "headers": {
+                                    "Content-Type": "text/plain"
+                                },
+                                "statusCode": 200
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {}
+            }
+        }
+    ]
+}
