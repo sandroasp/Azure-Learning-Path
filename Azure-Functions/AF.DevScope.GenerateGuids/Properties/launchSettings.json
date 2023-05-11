@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "GenerateGUID_UpperCase_Braces_Hyphens": {
+    "AF.DevScope.GenerateGuids": {
       "commandName": "Project",
       "commandLineArgs": "--port 7291",
       "launchBrowser": false
