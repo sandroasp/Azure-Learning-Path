@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "AF.DevScope.Conversion.Functions": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7009",
+      "launchBrowser": false
+    }
+  }
+}
