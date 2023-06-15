@@ -8,8 +8,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
 using Newtonsoft.Json.Schema;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AF.DevScope.JSONValidation
@@ -18,23 +18,41 @@ namespace AF.DevScope.JSONValidation
     {
         [FunctionName("JSONSchemaValidation")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
+            [HttpTrigger("post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            // Lendo o corpo da solicitação
+            // Read the request body
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             dynamic data = JsonConvert.DeserializeObject(requestBody);
 
-            // Lendo o esquema JSON a partir dos dados de entrada
+            // Read the JSON and schema strings from the input data
             string jsonString = data.json.ToString();
             string jsonSchemaString = data.jsonSchema.ToString();
 
-            // Parse do objeto JSON e do esquema JSON
+            // Parse the JSON and schema
             JToken json = JToken.Parse(jsonString);
             JSchema schema = JSchema.Parse(jsonSchemaString);
 
-            // Validando as propriedades do objeto JSON em relação ao esquema
+            // Validate the JSON against the schema
             IList<object> errorsList = new List<object>();
+            ValidateProperties(json, schema, errorsList);
+
+            if (errorsList.Any())
+            {
+                return new BadRequestObjectResult(errorsList);
+            }
+            else
+            {
+                return new OkResult();
+            }
+        }
+
+        private static void ValidateProperties(JToken json, JSchema schema, IList<object> errorsList)
+        {
+            if (json.Type != JTokenType.Object)
+            {
+                return;
+            }
 
             JObject jsonObject = (JObject)json;
 
@@ -47,30 +65,26 @@ namespace AF.DevScope.JSONValidation
                         foreach (string error in errors)
                         {
                             errorsList.Add(new Dictionary<string, string>
-                        {
-                             { "error", error }
-                        });
+                            {
+                                { "error", error }
+                            });
                         }
-                    }
-                    string expectedType = schema.Type.ToString();
-                    string actualType = json.Type.ToString();
-                    if (json.Type != JTokenType.Object)
-                    {
-                        errorsList.Add(new Dictionary<string, string>
-                    {
-                        { "typeerror", $"Invalid type. Expected: {expectedType}. Found: {actualType}." }
-                    });
                     }
                 }
             }
 
-            if (errorsList.Any())
+            if (schema.If != null && schema.Then != null && schema.Else != null)
             {
-                return new BadRequestObjectResult(errorsList);
-            }
-            else
-            {
-                return new OkResult();
+                bool isIfValid = json.IsValid(schema.If, out IList<string> ifErrors);
+
+                if (isIfValid)
+                {
+                    ValidateProperties(json, schema.Then, errorsList);
+                }
+                else
+                {
+                    ValidateProperties(json, schema.Else, errorsList);
+                }
             }
         }
     }
