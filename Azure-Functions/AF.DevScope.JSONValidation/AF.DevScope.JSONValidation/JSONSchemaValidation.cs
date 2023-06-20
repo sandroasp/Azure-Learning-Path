@@ -73,6 +73,17 @@ namespace AF.DevScope.JSONValidation
                 }
             }
 
+            foreach (var requiredProperty in schema.Required)
+            {
+                if (!jsonObject.ContainsKey(requiredProperty))
+                {
+                    errorsList.Add(new Dictionary<string, string>
+            {
+                { "error", $"Required property '{requiredProperty}' is missing." }
+            });
+                }
+            }
+
             if (schema.If != null && schema.Then != null && schema.Else != null)
             {
                 bool isIfValid = json.IsValid(schema.If, out IList<string> ifErrors);
