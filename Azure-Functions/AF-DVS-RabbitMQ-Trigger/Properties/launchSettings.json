@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "AF_DVS_RabbitMQ_TRIGGER_dotNET6": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7274",
+      "launchBrowser": false
+    }
+  }
+}
