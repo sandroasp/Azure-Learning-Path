@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "AF_DVS_Xml_To_Json_POC": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7249",
+      "launchBrowser": false
+    }
+  }
+}
