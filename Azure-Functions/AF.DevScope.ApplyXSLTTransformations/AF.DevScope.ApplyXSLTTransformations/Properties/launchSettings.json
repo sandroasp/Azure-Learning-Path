@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "AF.DevScope.ApplyXSLTTransformations": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7207",
+      "launchBrowser": false
+    }
+  }
+}
