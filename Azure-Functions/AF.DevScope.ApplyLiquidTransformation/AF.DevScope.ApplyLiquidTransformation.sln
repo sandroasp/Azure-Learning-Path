@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33801.468
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AF.DevScope.ApplyLiquidTransformation", "AF.DevScope.ApplyLiquidTransformation\AF.DevScope.ApplyLiquidTransformation.csproj", "{FB950DCB-226C-4B51-B618-6A73C0BD3587}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FB950DCB-226C-4B51-B618-6A73C0BD3587}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB950DCB-226C-4B51-B618-6A73C0BD3587}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB950DCB-226C-4B51-B618-6A73C0BD3587}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB950DCB-226C-4B51-B618-6A73C0BD3587}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0F229206-03C0-4F78-B52A-13D2D3C5AA7C}
+	EndGlobalSection
+EndGlobal
