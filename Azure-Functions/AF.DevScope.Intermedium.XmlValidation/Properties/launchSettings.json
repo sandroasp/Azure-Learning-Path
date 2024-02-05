@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "AF_DVS_ValidateImportSchemas": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7247",
+      "launchBrowser": false
+    }
+  }
+}
