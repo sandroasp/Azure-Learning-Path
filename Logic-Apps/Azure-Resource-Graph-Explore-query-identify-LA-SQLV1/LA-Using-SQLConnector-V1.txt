@@ -1,0 +1,22 @@
+﻿############################################################################
+#                                                                          #
+# Find Logic Apps Consumption using SQL Connector V1 actions and triggers  #
+# Author(s):                                                               #
+#    Luis Rigueira - Sandro Pereira                                        #
+#                                                                          #
+############################################################################
+
+resources
+| where type == 'microsoft.logic/workflows'
+| project name, location, resourceGroup, subscriptionId, createdTime=properties.createdTime, actions=properties.definition.actions
+| mv-expand action=actions
+| extend actionName = tostring(bag_keys(action)[0])
+| mv-expand actions
+| extend innerActionName = tostring(bag_keys(actions)[0])
+| where innerActionName != "" // Filter out empty inner action names
+| where actions[innerActionName].type == "ApiConnection" // Filter for actions of type "ApiConnection"
+| where tostring(actions[innerActionName].inputs) contains "/datasets/default/" // To know the where the version 2 of the sql actions are use following two steps in detriment of this one.
+//| where tostring(actions[innerActionName].inputs) contains "/v2/datasets/" // 
+//| where tostring(actions[innerActionName].inputs.host.connection.name) contains "sql" 
+| project name, location, resourceGroup, actionName, innerActionName, actions, subscriptionId, createdTime
+| summarize actions = makeset(actions), count() by name, innerActionName, location, resourceGroup, subscriptionId
