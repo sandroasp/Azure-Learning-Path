@@ -6,7 +6,21 @@
 #                                                                          #
 ############################################################################
 
-resources
+(resources
+| where type == 'microsoft.logic/workflows'
+| project name, location, resourceGroup, subscriptionId, createdTime=properties.createdTime, actions=properties.definition.actions
+| mv-expand action=actions
+| extend actionName = tostring(bag_keys(action)[0])
+| extend actionDetails = todynamic(tostring(action[actionName]))
+| mv-expand innerActionDetails = actionDetails.cases
+| extend innerActionName = tostring(bag_keys(innerActionDetails)[0])
+| where innerActionName != "" // Filter out empty inner action names
+| where innerActionDetails contains "sql" // Filter for innerActionDetails containing "sql"
+| where innerActionDetails contains "/datasets/default/" // Filter for innerActionDetails containing "sql"
+| project name, location, resourceGroup, actionName, innerActionName, innerActionDetails, subscriptionId, createdTime
+)
+| union (
+    resources
 | where type == 'microsoft.logic/workflows'
 | project name, location, resourceGroup, subscriptionId, createdTime=properties.createdTime, actions=properties.definition.actions
 | mv-expand action=actions
@@ -15,8 +29,10 @@ resources
 | extend innerActionName = tostring(bag_keys(actions)[0])
 | where innerActionName != "" // Filter out empty inner action names
 | where actions[innerActionName].type == "ApiConnection" // Filter for actions of type "ApiConnection"
-| where tostring(actions[innerActionName].inputs) contains "/datasets/default/" // To know the where the version 2 of the sql actions are use following two steps in detriment of this one.
-//| where tostring(actions[innerActionName].inputs) contains "/v2/datasets/" // 
-//| where tostring(actions[innerActionName].inputs.host.connection.name) contains "sql" 
+| where tostring(actions[innerActionName].inputs) contains "/datasets/default/"
+//| where tostring(actions[innerActionName].inputs) contains "/datasets/default"
+| where tostring(actions[innerActionName].inputs.host.connection.name) contains "sql"
 | project name, location, resourceGroup, actionName, innerActionName, actions, subscriptionId, createdTime
 | summarize actions = makeset(actions), count() by name, innerActionName, location, resourceGroup, subscriptionId
+)
+| order by name, resourceGroup asc
