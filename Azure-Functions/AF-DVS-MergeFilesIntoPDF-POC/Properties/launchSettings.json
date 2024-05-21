@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "AF_DVS_MergeFilesIntoPDF_POC": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7014",
+      "launchBrowser": false
+    }
+  }
+}
