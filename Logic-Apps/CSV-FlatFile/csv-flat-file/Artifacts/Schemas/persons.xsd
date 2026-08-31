@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns="http://csv-flat-file/persons"
+           xmlns:b="http://schemas.microsoft.com/BizTalk/2003"
+           targetNamespace="http://csv-flat-file/persons"
+           elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:annotation>
+    <xs:appinfo>
+      <schemaEditorExtension:schemaInfo namespaceAlias="b"
+                                        extensionClass="Microsoft.BizTalk.FlatFileExtension.FlatFileExtension"
+                                        standardName="Flat File"
+                                        xmlns:schemaEditorExtension="http://schemas.microsoft.com/BizTalk/2003/SchemaEditorExtensions" />
+      <b:schemaInfo standard="Flat File"
+                    codepage="65001"
+                    default_pad_char=" "
+                    pad_char_type="char"
+                    count_positions_by_byte="false"
+                    parser_optimization="speed"
+                    lookahead_depth="0"
+                    suppress_empty_nodes="false"
+                    generate_empty_nodes="true"
+                    allow_early_termination="false"
+                    early_terminate_optional_fields="false"
+                    allow_message_breakup_of_infix_root="false"
+                    compile_parse_tables="false"
+                    root_reference="Persons" />
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="Persons">
+    <xs:annotation>
+      <xs:appinfo>
+        <b:recordInfo structure="delimited"
+                      child_delimiter_type="hex"
+                      child_delimiter="0xd 0xa"
+                      child_order="infix"
+                      preserve_delimiter_for_empty_data="true"
+                      suppress_trailing_delimiters="true"
+                      sequence_number="1" />
+      </xs:appinfo>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:annotation>
+          <xs:appinfo>
+            <b:groupInfo sequence_number="0" />
+          </xs:appinfo>
+        </xs:annotation>
+        <xs:element name="Person" maxOccurs="unbounded">
+          <xs:annotation>
+            <xs:appinfo>
+              <b:recordInfo structure="delimited"
+                            child_delimiter_type="char"
+                            child_delimiter=","
+                            child_order="infix"
+                            preserve_delimiter_for_empty_data="true"
+                            suppress_trailing_delimiters="false"
+                            sequence_number="1" />
+            </xs:appinfo>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:annotation>
+                <xs:appinfo>
+                  <b:groupInfo sequence_number="0" />
+                </xs:appinfo>
+              </xs:annotation>
+              <xs:element name="FirstName" type="xs:string">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <b:fieldInfo justification="left" sequence_number="1" />
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="LastName" type="xs:string">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <b:fieldInfo justification="left" sequence_number="2" />
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="Address" type="xs:string">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <b:fieldInfo justification="left"
+                                 wrap_char_type="char"
+                                 wrap_char="&quot;"
+                                 sequence_number="3" />
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="PostalCode" type="xs:string">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <b:fieldInfo justification="left" sequence_number="4" />
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="City" type="xs:string">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <b:fieldInfo justification="left" sequence_number="5" />
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="Country" type="xs:string">
+                <xs:annotation>
+                  <xs:appinfo>
+                    <b:fieldInfo justification="left" sequence_number="6" />
+                  </xs:appinfo>
+                </xs:annotation>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

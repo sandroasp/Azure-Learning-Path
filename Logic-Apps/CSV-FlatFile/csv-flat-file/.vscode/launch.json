@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run/Debug logic app with local function csv-flat-file",
+      "type": "logicapp",
+      "request": "launch",
+      "funcRuntime": "coreclr",
+      "customCodeRuntime": "clr",
+      "isCodeless": true
+    }
+  ]
+}

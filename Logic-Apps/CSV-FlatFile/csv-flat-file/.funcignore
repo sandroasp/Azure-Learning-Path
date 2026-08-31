@@ -1,0 +1,10 @@
+.debug
+.git*
+.vscode
+__azurite_db*__.json
+__blobstorage__
+__queuestorage__
+global.json
+local.settings.json
+workflow-designtime
+workflow-designtime/
