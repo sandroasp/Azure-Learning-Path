@@ -29,6 +29,7 @@ Connect-AzAccount
 $subscription = Get-AzSubscription -SubscriptionName $subscriptioName
 $subscriptionId = $subscription.Id
 Write-Host 'Subscription Id: ' $subscriptionId
+Select-AzSubscription -SubscriptionId $subscriptionId
 
 #########################################################
 # Get Resource Group Info
